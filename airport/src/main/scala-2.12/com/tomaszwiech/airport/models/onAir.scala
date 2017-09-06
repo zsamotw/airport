@@ -1,37 +1,56 @@
 package com.tomaszwiech.airport.models
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorRef, Props}
 import java.lang.Thread._
 
-sealed trait WatchTowerComunicate
+object Airplane {
+  case object LandingConsent
+  case object SecondRing
+  case object Ask
 
-case object LandingConsent extends WatchTowerComunicate
-case object SecondRing extends WatchTowerComunicate
-case object Ask extends WatchTowerComunicate
+  def props(dest: ActorRef, name: String) = Props(new Airplane(dest, name))
+}
 
 class Airplane(dest: ActorRef, val name: String) extends Actor {
+  import com.tomaszwiech.airport.models.Airplane.{Ask, LandingConsent, SecondRing}
+  import com.tomaszwiech.airport.models.WatchTower.{LandingRequest}
+  import com.tomaszwiech.airport.models.Airport._
+
+  var isLendingConsent = false
+
   def receive = {
     case LandingConsent =>
-      Airport.landingLine.contener += this
-      for (i <- 1 to 5) {
-        println(s"$this is on landing line in $i")
-        sleep(1000)
+      if (isLendingConsent) {
+        println("I have just started landing. Over")
       }
-      Airport.landingLine.contener -= this
-      Airport.parking.contener += this
-      println(s"The plane $this on the ground. Over")
+      else {
+        isLendingConsent = true
+        if (secondRing.contener contains self) secondRing.contener -= self
+        landingLine.contener += self
+        for (i <- 5 to 1 by -1) {
+          println(s"$this is on landing line. $i seconds to ground")
+          sleep(1000)
+        }
+        landingLine.contener -= self
+        parking.contener += self
+        println(s"The plane $this on the ground. Over")
+      }
     case SecondRing =>
-      println(s"$this on the way to Second Ring")
-      sleep(1000)
-      Airport.secondRing.contener += this
-      println(s"$this on second ring. Waiting. Over")
+      if(secondRing.contener contains self) {
+        println(s"Ok. $this is staying on Second Ring")
+      }
+      else {
+//        println(s"$this on the way to Second Ring")
+//        sleep(1000)
+        secondRing.contener += self
+        println(s"$this on second ring. Waiting. Over")
+      }
       sleep(5000)
-      dest ! LandingRequest
-      Airport.secondRing.contener -= this
-      println(s"$this out of Second Ring. Sending new request for landing")
+      dest ! LandingRequest(this)
+      println(s"$this on Second Ring. Sending new request for landing")
     case Ask =>
-      println(s"$this asking for consent of landing")
-      dest ! LandingRequest
+      println(s"$this asking WatchTower for consent of landing")
+      dest ! LandingRequest(this)
   }
 
   override def toString: String = name
