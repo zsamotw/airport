@@ -1,7 +1,7 @@
 package com.tomaszwiech.airport.controllers
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import com.tomaszwiech.airport.models.Airplane.Ask
+import com.tomaszwiech.airport.models.Airplane.{StartProcedure}
 import com.tomaszwiech.airport.models._
 
 object AirportStart extends App {
@@ -12,13 +12,13 @@ object AirportStart extends App {
     val plain02: ActorRef = sky.actorOf(Airplane.props(watchTower, "Boeing"))
     val plain03: ActorRef = sky.actorOf(Airplane.props(watchTower, "Helicopter"))
     val plain04: ActorRef = sky.actorOf(Airplane.props(watchTower, "FlyFly"))
-    plain01 ! Ask
+    plain01 ! StartProcedure
     Thread.sleep(2000)
-    plain02 ! Ask
+    plain02 ! StartProcedure
     Thread.sleep(2000)
-    plain03 ! Ask
+    plain03 ! StartProcedure
     Thread.sleep(2000)
-    plain04 ! Ask
+    plain04 ! StartProcedure
   } catch {
     case e: Exception => println(e)
   } finally {

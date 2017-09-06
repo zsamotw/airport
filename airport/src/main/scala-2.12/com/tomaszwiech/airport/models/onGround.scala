@@ -5,13 +5,14 @@ import scala.collection.mutable.ListBuffer
 
 object WatchTower {
   case class LandingRequest(airplane: Airplane)
+  case object Landed
 
   def props = Props(new WatchTower)
 }
 
 class  WatchTower extends Actor {
   import com.tomaszwiech.airport.models.Airplane.{LandingConsent, SecondRing}
-  import com.tomaszwiech.airport.models.WatchTower.{LandingRequest}
+  import com.tomaszwiech.airport.models.WatchTower.{LandingRequest, Landed}
   import com.tomaszwiech.airport.models.Airport._
 
   case class DecissionData(isEmptySecondRing: Boolean, enoughPlacesLine: Boolean, enoughPlacesParking: Boolean, enoughPlacesSecondRing: Boolean)
@@ -23,17 +24,17 @@ class  WatchTower extends Actor {
         case DecissionData(true, true, true, _) =>
           sender() ! LandingConsent
           println (s"Agreement for landing ${airplane.name} Over!!")
-        case DecissionData(false, true, true, _) if sender == secondRing.head =>
-          println(s"${airplane.name} you are head of Second Ring and line is empty. You can start landing!!!!")
-          sender() ! LandingConsent
-        case DecissionData(false, false, true, _) if secondRing.contener contains sender =>
-          println (s"${airplane.name}, you aren't head od Second Ring. Stay in queue")
+        case DecissionData(_, _, true, true) =>
+          println(s"${airplane.name} stay on Second Ring. Over")
           sender() ! SecondRing
-          secondRing.head ! LandingConsent
-        case DecissionData(false,false,false,false) => println ("BingBang no place around. Run away!!!!")
+        case DecissionData(_, _, false,false) => println ("BingBang no place around. Run away!!!!")
         case _ =>
-          sender () ! SecondRing
-          println (s"${airplane.name} go to the second ring. Line isn't empty. Over")
+          println (s"Untypical situation!!!")
+      }
+    case Landed =>
+      if(secondRing.contener.nonEmpty) {
+        println(s"Landing Line is empty. ${secondRing.head} start landing.")
+        secondRing.head ! LandingConsent
       }
   }
 
@@ -43,9 +44,14 @@ class  WatchTower extends Actor {
 }
 
 class Area (val name: String, val max: Int, var contener: ListBuffer[ActorRef]) {
-  def areEnoughPlaces: Boolean = contener.length < max
 
   def head: ActorRef = contener.head
+
+  def in(ref: ActorRef) {contener += ref}
+
+  def out(ref: ActorRef) {contener -= ref}
+
+  def areEnoughPlaces: Boolean = contener.length < max
 
   def printContent {
     println(s"$name: ")
