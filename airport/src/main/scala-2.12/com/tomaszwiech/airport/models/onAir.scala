@@ -40,8 +40,6 @@ class Airplane(dest: ActorRef, val name: String) extends Actor {
         println(s"Ok. $this is staying on Second Ring")
       }
       else {
-//        println(s"$this on the way to Second Ring")
-//        sleep(1000)
         secondRing.contener += self
         println(s"$this on second ring. Waiting. Over")
       }
