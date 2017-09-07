@@ -12,9 +12,9 @@ object Airplane {
 }
 
 class Airplane(val dest: ActorRef, val name: String) extends Actor {
-  import com.tomaszwiech.airport.models.Airplane.{StartProcedure, LandingConsent, SecondRing}
-  import com.tomaszwiech.airport.models.WatchTower.{LandingRequest, Landed}
+  import Airplane.{LandingConsent, SecondRing, StartProcedure}
   import com.tomaszwiech.airport.models.Airport._
+  import com.tomaszwiech.airport.models.WatchTower.{LandingRequest, Landed}
 
     def receive = {
       case LandingConsent =>

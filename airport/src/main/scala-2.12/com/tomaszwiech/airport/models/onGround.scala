@@ -11,9 +11,9 @@ object WatchTower {
 }
 
 class  WatchTower extends Actor {
-  import com.tomaszwiech.airport.models.Airplane.{LandingConsent, SecondRing}
-  import com.tomaszwiech.airport.models.WatchTower.{LandingRequest, Landed}
+  import com.tomaszwiech.airport.models.Airplane.{LandingConsent, SecondRing, StartProcedure}
   import com.tomaszwiech.airport.models.Airport._
+  import WatchTower.{LandingRequest, Landed}
 
   case class DecissionData(isEmptySecondRing: Boolean, enoughPlacesLine: Boolean, enoughPlacesParking: Boolean, enoughPlacesSecondRing: Boolean)
 
@@ -47,9 +47,9 @@ class Area (val name: String, val max: Int, var contener: ListBuffer[ActorRef]) 
 
   def head: ActorRef = contener.head
 
-  def in(ref: ActorRef) {contener += ref}
+  def in(ref: ActorRef) { contener += ref }
 
-  def out(ref: ActorRef) {contener -= ref}
+  def out(ref: ActorRef) { contener -= ref }
 
   def areEnoughPlaces: Boolean = contener.length < max
 
