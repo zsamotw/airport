@@ -4,19 +4,22 @@ import akka.actor.{Actor, ActorRef, Props}
 import java.lang.Thread._
 
 object Airplane {
+  def props(dest: ActorRef, name: String) = Props(new Airplane(dest, name))
+
   case object LandingConsent
   case object SecondRing
-  case object StartProcedure
-
-  def props(dest: ActorRef, name: String) = Props(new Airplane(dest, name))
 }
 
 class Airplane(val dest: ActorRef, val name: String) extends Actor {
-  import Airplane.{LandingConsent, SecondRing, StartProcedure}
+  import Airplane.{LandingConsent, SecondRing}
   import com.tomaszwiech.airport.models.Airport._
   import com.tomaszwiech.airport.models.WatchTower.{LandingRequest, Landed}
 
-    def receive = {
+  override def preStart(): Unit = {
+    dest ! LandingRequest(this)
+  }
+
+  override def receive = {
       case LandingConsent =>
         if (secondRing.contener contains self) secondRing.out(self)
         landingLine.in(self)
@@ -31,9 +34,6 @@ class Airplane(val dest: ActorRef, val name: String) extends Actor {
       case SecondRing =>
         secondRing.in(self)
         println(s"$this on second ring. Waiting. Over")
-      case StartProcedure =>
-        println(s"$this asking WatchTower for consent of landing")
-        dest ! LandingRequest(this)
     }
 
   override def toString: String = name

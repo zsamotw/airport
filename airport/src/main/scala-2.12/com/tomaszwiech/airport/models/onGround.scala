@@ -4,18 +4,26 @@ import akka.actor.{Actor, ActorRef, Props}
 import scala.collection.mutable.ListBuffer
 
 object WatchTower {
+  def props = Props(new WatchTower)
+
   case class LandingRequest(airplane: Airplane)
   case object Landed
-
-  def props = Props(new WatchTower)
 }
 
 class  WatchTower extends Actor {
-  import com.tomaszwiech.airport.models.Airplane.{LandingConsent, SecondRing, StartProcedure}
+  import com.tomaszwiech.airport.models.Airplane.{LandingConsent, SecondRing}
   import com.tomaszwiech.airport.models.Airport._
   import WatchTower.{LandingRequest, Landed}
 
   case class DecissionData(isEmptySecondRing: Boolean, enoughPlacesLine: Boolean, enoughPlacesParking: Boolean, enoughPlacesSecondRing: Boolean)
+
+  override def preStart(): Unit = {
+    println("WatchTower is ready!")
+  }
+
+  override def postStop(): Unit = {
+    println("WatchTower shutdown. Airplanes take care!")
+  }
 
   def receive = {
     case LandingRequest(airplane) =>
