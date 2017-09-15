@@ -6,14 +6,15 @@ import scala.collection.mutable.ListBuffer
 object WatchTower {
   def props = Props(new WatchTower)
 
-  case class LandingRequest(airplane: Airplane)
-  case object Landed
+  case object LandingConsent
+  case object SecondRing
+
 }
 
 class  WatchTower extends Actor {
-  import com.tomaszwiech.airport.models.Airplane.{LandingConsent, SecondRing}
+  import com.tomaszwiech.airport.models.Airplane.{LandingRequest, Landed}
   import com.tomaszwiech.airport.models.Airport._
-  import WatchTower.{LandingRequest, Landed}
+  import WatchTower.{LandingConsent, SecondRing}
 
   case class DecissionData(isEmptySecondRing: Boolean, enoughPlacesLine: Boolean, enoughPlacesParking: Boolean, enoughPlacesSecondRing: Boolean)
 

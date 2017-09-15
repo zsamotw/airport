@@ -6,14 +6,15 @@ import java.lang.Thread._
 object Airplane {
   def props(dest: ActorRef, name: String) = Props(new Airplane(dest, name))
 
-  case object LandingConsent
-  case object SecondRing
+  case class LandingRequest(airplane: Airplane)
+  case class StartingRequest(airplane: Airplane)
+  case object Landed
 }
 
 class Airplane(val dest: ActorRef, val name: String) extends Actor {
-  import Airplane.{LandingConsent, SecondRing}
+  import Airplane.{LandingRequest, StartingRequest, Landed}
   import com.tomaszwiech.airport.models.Airport._
-  import com.tomaszwiech.airport.models.WatchTower.{LandingRequest, Landed}
+  import com.tomaszwiech.airport.models.WatchTower.{LandingConsent, SecondRing}
 
   override def preStart(): Unit = {
     dest ! LandingRequest(this)
