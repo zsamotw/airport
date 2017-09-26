@@ -8,7 +8,6 @@ object WatchTower {
 
   case object LandingConsent
   case object SecondRing
-
 }
 
 class  WatchTower extends Actor {
@@ -56,15 +55,15 @@ class Area (val name: String, val max: Int, var contener: ListBuffer[ActorRef]) 
 
   def head: ActorRef = contener.head
 
-  def in(ref: ActorRef) { contener += ref }
+  def in(ref: ActorRef): Unit =  { contener += ref }
 
-  def out(ref: ActorRef) { contener -= ref }
+  def out(ref: ActorRef): Unit = { contener -= ref }
 
   def areEnoughPlaces: Boolean = contener.length < max
 
-  def printContent {
+  def printContent: Unit = {
     println(s"$name: ")
-    contener.foreach(plane => print(s"$plane - "))
+    contener.foreach(plane => print(s"${plane} - "))
     println(s"\n${contener.length} / $max ")
   }
 }
