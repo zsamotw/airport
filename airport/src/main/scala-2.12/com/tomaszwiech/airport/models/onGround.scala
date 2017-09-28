@@ -6,15 +6,15 @@ import scala.collection.mutable.ListBuffer
 object WatchTower {
   def props = Props(new WatchTower)
 
-  case object LandingConsent
-  case object StartingConsent
+  case object LandingPermission
+  case object StartingPermission
   case object SecondRing
 }
 
 class  WatchTower extends Actor {
   import com.tomaszwiech.airport.models.Airplane.{LandingRequest, StartingRequest, Landed, Started}
   import com.tomaszwiech.airport.models.Airport._
-  import WatchTower.{LandingConsent, StartingConsent, SecondRing}
+  import WatchTower.{LandingPermission, StartingPermission, SecondRing}
 
   case class DecissionData(isEmptySecondRing: Boolean, enoughPlacesLine: Boolean, enoughPlacesParking: Boolean, enoughPlacesSecondRing: Boolean, isAnyStartingRequest: Boolean)
 
@@ -31,8 +31,8 @@ class  WatchTower extends Actor {
       val decisionData = DecissionData(emptySecondRing, areEnoughPlaces(landingLine), areEnoughPlaces(parking), areEnoughPlaces(secondRing), noStartingRequests)
       decisionData match {
         case DecissionData(true, true, true, _, true) =>
-          sender() ! LandingConsent
-          println (s"Agreement for landing ${airplane.name} Over!!")
+          sender() ! LandingPermission
+          println (s"Permission for landing ${airplane.name} Over!!")
         case DecissionData(_, _, true, true, _) =>
           println(s"${airplane.name} stay on Second Ring. Over")
           sender() ! SecondRing
@@ -43,28 +43,28 @@ class  WatchTower extends Actor {
     case Landed =>
       if(noStartingRequests && !emptySecondRing) {
         println(s"Landing Line is empty. No airplanes preparing to start. ${secondRing.head} start landing.")
-        secondRing.head ! LandingConsent
+        secondRing.head ! LandingPermission
       }
       else if(!noStartingRequests){
         println(s"${startingRequests.head} you can take off.")
-        startingRequests.head ! StartingConsent
+        startingRequests.head ! StartingPermission
       }
       else println("No airplanes in second ring and there are no starting requests")
     case StartingRequest(airplane) =>
       if(areEnoughPlaces(landingLine) && isHeadOfStartingRequests(sender)) {
         println(s"${airplane.name} can take off!!!")
-        sender() ! StartingConsent
+        sender() ! StartingPermission
       } else {
-        println(s" ${airplane.name}, you have to wait in qeue")
+        println(s"${airplane.name}, you have to wait in queue. ${startingRequests.contener.length} airplanes waiting for permission")
       }
     case Started =>
       if(noStartingRequests && !emptySecondRing) {
         println(s"Landing Line is empty. No airplanes preparing to start. ${secondRing.head} start landing.")
-        secondRing.head ! LandingConsent
+        secondRing.head ! LandingPermission
       }
       else if(!noStartingRequests){
         println(s"${startingRequests.head} you can take off.")
-        startingRequests.head ! StartingConsent
+        startingRequests.head ! StartingPermission
       }
       else println("No airplanes in second ring and there are no starting requests")
   }

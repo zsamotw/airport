@@ -16,7 +16,7 @@ class Airplane(val dest: ActorRef, val name: String, turnOffTime: Int) extends A
   import Airplane.{LandingRequest, StartingRequest, Landed, Started}
   import Steward.{CheckSeatBealts}
   import com.tomaszwiech.airport.models.Airport._
-  import com.tomaszwiech.airport.models.WatchTower.{LandingConsent, StartingConsent, SecondRing}
+  import com.tomaszwiech.airport.models.WatchTower.{LandingPermission, StartingPermission, SecondRing}
 
   val steward = context.actorOf(Steward.props)
 
@@ -27,7 +27,7 @@ class Airplane(val dest: ActorRef, val name: String, turnOffTime: Int) extends A
   override def postStop(): Unit = println(s"${name} is on the way to other airport. Bye!")
 
   override def receive = {
-    case LandingConsent =>
+    case LandingPermission =>
       steward ! CheckSeatBealts(this.name)
       if (secondRing.contener contains self) secondRing.out(self)
       landingLine.in(self)
@@ -46,7 +46,7 @@ class Airplane(val dest: ActorRef, val name: String, turnOffTime: Int) extends A
     case SecondRing =>
       secondRing.in(self)
       println(s"$this on second ring. Waiting. Over")
-    case StartingConsent =>
+    case StartingPermission =>
       println(s"$this starts procedure of taking off")
       steward ! CheckSeatBealts(this.name)
       parking.out(self)
