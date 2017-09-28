@@ -7,15 +7,16 @@ object WatchTower {
   def props = Props(new WatchTower)
 
   case object LandingConsent
+  case object StartingConsent
   case object SecondRing
 }
 
 class  WatchTower extends Actor {
-  import com.tomaszwiech.airport.models.Airplane.{LandingRequest, Landed}
+  import com.tomaszwiech.airport.models.Airplane.{LandingRequest, StartingRequest, Landed, Started}
   import com.tomaszwiech.airport.models.Airport._
-  import WatchTower.{LandingConsent, SecondRing}
+  import WatchTower.{LandingConsent, StartingConsent, SecondRing}
 
-  case class DecissionData(isEmptySecondRing: Boolean, enoughPlacesLine: Boolean, enoughPlacesParking: Boolean, enoughPlacesSecondRing: Boolean)
+  case class DecissionData(isEmptySecondRing: Boolean, enoughPlacesLine: Boolean, enoughPlacesParking: Boolean, enoughPlacesSecondRing: Boolean, isAnyStartingRequest: Boolean)
 
   override def preStart(): Unit = {
     println("WatchTower is ready!")
@@ -27,28 +28,54 @@ class  WatchTower extends Actor {
 
   def receive = {
     case LandingRequest(airplane) =>
-      val decisionData = DecissionData(emptySecondRing, areEnoughPlaces(landingLine), areEnoughPlaces(parking), areEnoughPlaces(secondRing))
+      val decisionData = DecissionData(emptySecondRing, areEnoughPlaces(landingLine), areEnoughPlaces(parking), areEnoughPlaces(secondRing), noStartingRequests)
       decisionData match {
-        case DecissionData(true, true, true, _) =>
+        case DecissionData(true, true, true, _, true) =>
           sender() ! LandingConsent
           println (s"Agreement for landing ${airplane.name} Over!!")
-        case DecissionData(_, _, true, true) =>
+        case DecissionData(_, _, true, true, _) =>
           println(s"${airplane.name} stay on Second Ring. Over")
           sender() ! SecondRing
-        case DecissionData(_, _, false,false) => println ("BingBang no place around. Run away!!!!")
+        case DecissionData(_, _, false,false, _) => println ("BingBang no place around. Run away!!!!")
         case _ =>
           println (s"Untypical situation!!!")
       }
     case Landed =>
-      if(secondRing.contener.nonEmpty) {
-        println(s"Landing Line is empty. ${secondRing.head} start landing.")
+      if(noStartingRequests && !emptySecondRing) {
+        println(s"Landing Line is empty. No airplanes preparing to start. ${secondRing.head} start landing.")
         secondRing.head ! LandingConsent
       }
+      else if(!noStartingRequests){
+        println(s"${startingRequests.head} you can take off.")
+        startingRequests.head ! StartingConsent
+      }
+      else println("No airplanes in second ring and there are no starting requests")
+    case StartingRequest(airplane) =>
+      if(areEnoughPlaces(landingLine) && isHeadOfStartingRequests(sender)) {
+        println(s"${airplane.name} can take off!!!")
+        sender() ! StartingConsent
+      } else {
+        println(s" ${airplane.name}, you have to wait in qeue")
+      }
+    case Started =>
+      if(noStartingRequests && !emptySecondRing) {
+        println(s"Landing Line is empty. No airplanes preparing to start. ${secondRing.head} start landing.")
+        secondRing.head ! LandingConsent
+      }
+      else if(!noStartingRequests){
+        println(s"${startingRequests.head} you can take off.")
+        startingRequests.head ! StartingConsent
+      }
+      else println("No airplanes in second ring and there are no starting requests")
   }
 
   def areEnoughPlaces(area: Area): Boolean = area.areEnoughPlaces
 
   def emptySecondRing: Boolean = secondRing.contener.isEmpty
+
+  def noStartingRequests: Boolean = startingRequests.contener.isEmpty
+
+  def isHeadOfStartingRequests(airplane: ActorRef) = startingRequests.contener.head == airplane
 }
 
 class Area (val name: String, val max: Int, var contener: ListBuffer[ActorRef]) {
@@ -69,7 +96,8 @@ class Area (val name: String, val max: Int, var contener: ListBuffer[ActorRef]) 
 }
 
 case object Airport {
-  var landingLine = new Area("Landing Line", 1, new ListBuffer[ActorRef] )
+  var startingRequests = new Area("Starting Requests", 5, new ListBuffer[ActorRef])
+  var landingLine = new Area("Landing Line", 1, new ListBuffer[ActorRef])
   var parking = new Area("Parking", 5, new ListBuffer[ActorRef])
   var secondRing = new Area("Second Ring", 5, new ListBuffer[ActorRef])
 }
