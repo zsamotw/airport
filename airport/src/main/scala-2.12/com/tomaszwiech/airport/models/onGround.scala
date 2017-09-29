@@ -16,7 +16,12 @@ class  WatchTower extends Actor {
   import com.tomaszwiech.airport.models.Airport._
   import WatchTower.{LandingPermission, StartingPermission, SecondRing}
 
-  case class DecissionData(isEmptySecondRing: Boolean, enoughPlacesLine: Boolean, enoughPlacesParking: Boolean, enoughPlacesSecondRing: Boolean, isAnyStartingRequest: Boolean)
+  case class DecissionData(
+    isEmptySecondRing: Boolean,
+    enoughPlacesLine: Boolean,
+    enoughPlacesParking: Boolean,
+    enoughPlacesSecondRing: Boolean,
+    isAnyStartingRequest: Boolean)
 
   override def preStart(): Unit = {
     println("WatchTower is ready!")
