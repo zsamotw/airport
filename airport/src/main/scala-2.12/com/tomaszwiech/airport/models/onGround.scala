@@ -1,7 +1,8 @@
 package com.tomaszwiech.airport.models
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef, Props, Timers}
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.duration._
 
 object WatchTower {
   def props = Props(new WatchTower)
@@ -9,12 +10,15 @@ object WatchTower {
   case object LandingPermission
   case object StartingPermission
   case object SecondRing
+
+  case object SpreadMessage
+  case object SpreadKey
 }
 
-class  WatchTower extends Actor {
+class  WatchTower extends Actor with Timers{
   import com.tomaszwiech.airport.models.Airplane.{LandingRequest, StartingRequest, Landed, Started}
   import com.tomaszwiech.airport.models.Airport._
-  import WatchTower.{LandingPermission, StartingPermission, SecondRing}
+  import WatchTower.{LandingPermission, StartingPermission, SecondRing, SpreadMessage, SpreadKey}
 
   case class DecissionData(
     isEmptySecondRing: Boolean,
@@ -25,6 +29,7 @@ class  WatchTower extends Actor {
 
   override def preStart(): Unit = {
     println("WatchTower is ready!")
+    timers.startPeriodicTimer(SpreadKey, SpreadMessage, 10.second)
   }
 
   override def postStop(): Unit = {
@@ -72,6 +77,7 @@ class  WatchTower extends Actor {
         startingRequests.head ! StartingPermission
       }
       else println("No airplanes in second ring and there are no starting requests")
+    case SpreadMessage => println("Aiplanes. Take care. Watch Tower is working!")
   }
 
   def areEnoughPlaces(area: Area): Boolean = area.areEnoughPlaces
