@@ -2,6 +2,7 @@ package com.tomaszwiech.airport.models
 
 import akka.actor.{Actor, ActorRef, Props}
 import java.lang.Thread._
+import scala.concurrent.Future
 
 object Airplane {
   def props(dest: ActorRef, name: String, turnOffTime: Int) = Props(new Airplane(dest, name, turnOffTime))

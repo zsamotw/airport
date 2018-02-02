@@ -1,6 +1,6 @@
 package com.tomaszwiech.airport.controllers
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem}
 import com.tomaszwiech.airport.models._
 
 object AirportStart extends App {
@@ -22,4 +22,6 @@ object AirportStart extends App {
     Airport.secondRing.printContent
     sky.terminate
   }
-} 
+}
+
+
